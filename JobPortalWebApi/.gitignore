@@ -1,0 +1,20 @@
+# .gitignore (Solution Root Folder)
+
+# Visual Studio files
+*.user
+*.suo
+
+# Visual Studio files and cache
+.vs/
+*.user
+
+# Project binaries and compilation artifacts
+[Bb]in/
+[Oo]bj/
+
+# Secret Configuration Files (YOUR FILE)
+appsettings.Secrets.json
+appsettings.Development.json  # ??? ?? ???? ???????? ???? ???? ???
+appsettings.Production.json
+
+ 
