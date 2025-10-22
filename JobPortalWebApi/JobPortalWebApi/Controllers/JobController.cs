@@ -62,11 +62,10 @@ namespace JobPortalWebApi.Controllers
                 Location = viewModel.Location,
                 Skills = viewModel.Skills,
                 JobDescription = viewModel.Description,
-                PostedDate = DateTime.Now,
+                PostedDate = DateTime.UtcNow,
                 RecruiterId = recruiter.Id,
                 JobCategoryId = viewModel.JobCategoryId
             };
-
             await _jobService.PostJobAsync(jobPost);
 
             // Return a success response instead of a redirect

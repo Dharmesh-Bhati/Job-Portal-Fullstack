@@ -94,7 +94,7 @@ const EditJob = () => {
         };
 
         try {
-            await axios.put(`https://localhost:7203/api/job/update`, dataToSend, {
+            await axios.put(`${API_BASE_URL}/update`, dataToSend, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             alert('Job updated successfully!');

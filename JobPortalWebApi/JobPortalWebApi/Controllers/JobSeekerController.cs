@@ -19,7 +19,7 @@ public class JobSeekerController : ControllerBase
         _jobSeekerService = jobSeekerService;
     }
 
-     
+
     [HttpGet("details")]
     public async Task<IActionResult> GetJobSeekerDetails()
     {
@@ -37,24 +37,9 @@ public class JobSeekerController : ControllerBase
         }
 
         return Ok(viewModel);
+
+     
     }
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
-        {
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-        }
-
-        var viewModel = await _jobSeekerService.GetJobSeekerDetailsViewModel(User);
-        if (viewModel == null)
-        {
-            // Or return a specific status code like 204 No Content
-            return NotFound("Job seeker details not found. Please add them first.");
-        }
-
-        return Ok(viewModel);
-    }
-
     // Using a POST request for adding/updating is more RESTful.
     [HttpPost("details")]
     public async Task<IActionResult> AddOrUpdateJobSeekerDetails([FromForm] JobSeekerDetailsViewModel model)
@@ -77,14 +62,14 @@ public class JobSeekerController : ControllerBase
         return Ok(new { message = "Job seeker details updated successfully." });
     }
 
-   
+
     [HttpGet("resume")]
     public async Task<IActionResult> MyResume()
     {
         try
         {
             var viewModel = await _jobSeekerService.GetJobSeekerDetailsViewModel(User);
- 
+
             if (viewModel.ProfessionTitle == null)
             {
                 return NotFound("Please create your resume first.");
@@ -94,7 +79,7 @@ public class JobSeekerController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-           
+
             return NotFound(ex.Message);
         }
     }

@@ -16,7 +16,7 @@ namespace JobPortalWebApi.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly UserManager<ApplicationUser> _userManager; // Add this field
+        private readonly UserManager<ApplicationUser> _userManager;  
 
         public RecruiterService(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, UserManager<ApplicationUser> userManager) // Add UserManager to the constructor
         {
@@ -24,51 +24,51 @@ namespace JobPortalWebApi.Services
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
         }
+         
 
         public async Task<CompanyRegistrationViewModel> GetCompanyRegistrationViewModel(string userId)
         {
-            // Fetch the ApplicationUser object to get username and email
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                // Handle case where user does not exist
-                return null;
+                return null; // User not found
             }
 
             var existingRecruiter = await _unitOfWork.Recruiters.GetByApplicationUserIdWithCompanyAddress(userId);
 
-            if (existingRecruiter != null && existingRecruiter.CompanyAddress != null)
+             var viewModel = new CompanyRegistrationViewModel
             {
-                return new CompanyRegistrationViewModel
-                {
-                    // Correctly populate user information
-                    RecruiterUsername = user.UserName,
-                    RecruiterEmail = user.Email,
+                RecruiterUsername = user.UserName,
+                RecruiterEmail = user.Email,
+            };
 
-                    // Assuming user data is handled by the controller
-                    CompanyName = existingRecruiter.CompanyAddress.CompanyName,
-                    CompanyWebsite = existingRecruiter.CompanyAddress.CompanyWebsite,
-                    CompanyDescription = existingRecruiter.CompanyAddress.CompanyDescription,
-                    Address = existingRecruiter.CompanyAddress.Address,
-                    Phone = existingRecruiter.CompanyAddress.Phone,
-                    ZipCode = existingRecruiter.CompanyAddress.ZipCode.ToString(),
-                    City = existingRecruiter.CompanyAddress.City,
-                    Region = existingRecruiter.CompanyAddress.Region,
-                    Country = existingRecruiter.CompanyAddress.Country,
-                    ExistingCompanyLogoPath = existingRecruiter.CompanyAddress.CompanyLogo
-                };
+             if (existingRecruiter != null && existingRecruiter.CompanyAddress != null)
+            {
+                viewModel.CompanyName = existingRecruiter.CompanyAddress.CompanyName;
+                viewModel.CompanyWebsite = existingRecruiter.CompanyAddress.CompanyWebsite;
+                viewModel.CompanyDescription = existingRecruiter.CompanyAddress.CompanyDescription;
+                 viewModel.Address = existingRecruiter.CompanyAddress.Address;
+                viewModel.Phone = existingRecruiter.CompanyAddress.Phone;
+                viewModel.ZipCode = existingRecruiter.CompanyAddress.ZipCode.ToString();
+                viewModel.City = existingRecruiter.CompanyAddress.City;
+                viewModel.Region = existingRecruiter.CompanyAddress.Region;
+                viewModel.Country = existingRecruiter.CompanyAddress.Country;
+                viewModel.ExistingCompanyLogoPath = existingRecruiter.CompanyAddress.CompanyLogo;
             }
-            return new CompanyRegistrationViewModel();
+
+             return viewModel;
         }
 
+
         public async Task AddOrUpdateCompanyProfile(string userId, CompanyRegistrationViewModel model)
-        {
+        { 
             var existingRecruiter = await _unitOfWork.Recruiters.GetByApplicationUserIdWithCompanyAddress(userId);
             string? newLogoPath = null;
 
+            
             if (model.CompanyLogoFile != null)
             {
-                // Delete old logo
+                
                 if (existingRecruiter != null && existingRecruiter.CompanyAddress != null && !string.IsNullOrEmpty(existingRecruiter.CompanyAddress.CompanyLogo))
                 {
                     var oldLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, existingRecruiter.CompanyAddress.CompanyLogo.TrimStart('/'));
@@ -78,7 +78,7 @@ namespace JobPortalWebApi.Services
                     }
                 }
 
-                // Save new logo
+               
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/companylogos");
                 Directory.CreateDirectory(uploadsFolder);
                 string uniqueFileName = Guid.NewGuid().ToString() + "_" + model.CompanyLogoFile.FileName;
@@ -91,11 +91,18 @@ namespace JobPortalWebApi.Services
                 newLogoPath = "/images/companylogos/" + uniqueFileName;
             }
 
+            
             if (existingRecruiter != null)
             {
-                // UPDATE EXISTING PROFILE
-                var companyAddressToUpdate = existingRecruiter.CompanyAddress ?? new CompanyAddress();
+                
+                var companyAddressToUpdate = existingRecruiter.CompanyAddress;
+                if (companyAddressToUpdate == null)
+                {
+                    companyAddressToUpdate = new CompanyAddress();
+                    existingRecruiter.CompanyAddress = companyAddressToUpdate;  
+                }
 
+                
                 companyAddressToUpdate.CompanyName = model.CompanyName;
                 companyAddressToUpdate.CompanyWebsite = model.CompanyWebsite;
                 companyAddressToUpdate.CompanyDescription = model.CompanyDescription;
@@ -110,16 +117,21 @@ namespace JobPortalWebApi.Services
                 {
                     companyAddressToUpdate.CompanyLogo = newLogoPath;
                 }
-                else if (!string.IsNullOrEmpty(model.ExistingCompanyLogoPath))
+                else if (model.CompanyLogoFile == null && !string.IsNullOrEmpty(model.ExistingCompanyLogoPath))
                 {
-                    companyAddressToUpdate.CompanyLogo = model.ExistingCompanyLogoPath;
+                     companyAddressToUpdate.CompanyLogo = model.ExistingCompanyLogoPath;
+                }
+                else if (model.CompanyLogoFile == null && string.IsNullOrEmpty(model.ExistingCompanyLogoPath))
+                {
+                     companyAddressToUpdate.CompanyLogo = null;
                 }
 
+ 
                 _unitOfWork.Recruiters.Update(existingRecruiter);
             }
             else
             {
-                // CREATE NEW PROFILE
+                 
                 var newRecruiter = new Recruiter
                 {
                     ApplicationUserId = userId,
@@ -140,6 +152,7 @@ namespace JobPortalWebApi.Services
                 await _unitOfWork.Recruiters.Add(newRecruiter);
             }
 
+           
             await _unitOfWork.CompleteAsync();
         }
     }

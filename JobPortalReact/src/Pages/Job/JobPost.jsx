@@ -22,7 +22,7 @@ const PostJob = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    // Fetch available job categories on component load
+    
     useEffect(() => {
         const fetchJobCategories = async () => {
             const token = localStorage.getItem('userToken');
@@ -32,7 +32,7 @@ const PostJob = () => {
                 return;
             }
             try {
-                // Assuming you have an endpoint to get all categories
+                
                 const response = await axios.get(`${API_BASE_URL}/post`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -87,7 +87,7 @@ const PostJob = () => {
 
     return (
         <>
-            {/* Page Header section */}
+             
             <div className="page-header" style={{ background: 'url(/assets/img/banner1.jpg) no-repeat center center', backgroundSize: 'cover', width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw' }}>
                 <div className="container">
                     <div className="row">
@@ -104,7 +104,7 @@ const PostJob = () => {
                 </div>
             </div>
 
-            {/* Content section */}
+            
             <section id="content">
                 <div className="container">
                     <div className="row">
@@ -114,13 +114,13 @@ const PostJob = () => {
                                     <div className="divider"><h3>Job Details</h3></div>
                                     {error && <div className="alert alert-danger">{error}</div>}
 
-                                    {/* Job Title */}
+                                     
                                     <div className="form-group">
                                         <label className="control-label"><span>Job Title</span></label>
                                         <input className="form-control" name="jobTitle" value={formData.jobTitle} onChange={handleChange} required />
                                     </div>
 
-                                    {/* Job Type */}
+                                   
                                     <div className="form-group">
                                         <label className="control-label"><span>Job Type</span></label>
                                         <div className="search-category-container">
@@ -134,7 +134,7 @@ const PostJob = () => {
                                         </div>
                                     </div>
 
-                                    {/* Job Category */}
+                                   
                                     <div className="form-group">
                                         <label className="control-label"><span>Job Category</span></label>
                                         <div className="search-category-container">
@@ -149,7 +149,7 @@ const PostJob = () => {
                                         </div>
                                     </div>
 
-                                    {/* Experience */}
+                                  
                                     <div className="form-group">
                                         <label className="control-label"><span>Experience</span></label>
                                         <div className="search-category-container">
@@ -162,8 +162,7 @@ const PostJob = () => {
                                             </select>
                                         </div>
                                     </div>
-
-                                    {/* Other fields */}
+ 
                                     <div className="form-group">
                                         <label className="control-label"><span>Vacancy</span></label>
                                         <input type="number" name="vacancy" value={formData.vacancy} onChange={handleChange} className="form-control" required />

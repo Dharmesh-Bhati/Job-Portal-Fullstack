@@ -89,7 +89,7 @@ namespace JobPortalWebApi.Services
             jobToUpdate.Location = model.Location;
             jobToUpdate.Skills = model.Skills;
             jobToUpdate.JobDescription = model.Description;
-            jobToUpdate.PostedDate = model.PostedDate;
+            jobToUpdate.PostedDate = DateTime.SpecifyKind(model.PostedDate, DateTimeKind.Utc);
 
             _unitOfWork.JobPosts.Update(jobToUpdate);
             await _unitOfWork.CompleteAsync();
@@ -109,24 +109,19 @@ namespace JobPortalWebApi.Services
         // JobService.cs: DeleteJobAsync method
         public async Task DeleteJobAsync(int jobId)
         {
-            // A. JobPost को applications के साथ fetch करने के लिए सही method का उपयोग करें।
-            // Note: यह method IJobApplicationRepository में डिफाइन है, इसलिए JobApplications Repository से कॉल होगा।
+             
             var jobToDelete = await _unitOfWork.JobApplications.GetJobPostWithApplicantsAsync(jobId);
 
             if (jobToDelete == null) return;
 
-            // B. पहले Child Records (JobApplications) को डिलीट करें
-            if (jobToDelete.JobApplications != null && jobToDelete.JobApplications.Any())
+             if (jobToDelete.JobApplications != null && jobToDelete.JobApplications.Any())
             {
-                // ... (बाकी कोड जैसा है वैसा ही रखें)
-                _unitOfWork.JobApplications.DeleteRange(jobToDelete.JobApplications);
+                 _unitOfWork.JobApplications.DeleteRange(jobToDelete.JobApplications);
             }
 
-            // C. Parent Record (JobPost) को डिलीट करें
-            _unitOfWork.JobPosts.Delete(jobToDelete);
+             _unitOfWork.JobPosts.Delete(jobToDelete);
 
-            // D. Changes को Save करें
-            await _unitOfWork.CompleteAsync();
+             await _unitOfWork.CompleteAsync();
         }
 
 
@@ -200,7 +195,7 @@ namespace JobPortalWebApi.Services
             {
                 JobPostId = jobId,
                 JobSeekerId = jobSeeker.Id,
-                AppliedDate = DateTime.Now,
+                AppliedDate = DateTime.UtcNow,
                 Status = "Pending"
             };
 
@@ -228,14 +223,11 @@ namespace JobPortalWebApi.Services
 
          public async Task<AllJobsViewModel> SearchJobsAsync(string keywords, string city, string category)
         {
-            // Repository se data uthayein using GetJobsBySearchCriteria
-            var jobPosts = _unitOfWork.JobPosts.GetJobsBySearchCriteria(keywords, city, category);
+             var jobPosts = _unitOfWork.JobPosts.GetJobsBySearchCriteria(keywords, city, category);
 
-            // Ab database se data fetch karein (query ko execute karein)
-            var filteredJobs = await jobPosts.ToListAsync();
+             var filteredJobs = await jobPosts.ToListAsync();
 
-            // JobPost entities ko JobCard ViewModel mein map karein
-            var jobCardViewModels = filteredJobs.Select(job => new JobCardViewModel
+             var jobCardViewModels = filteredJobs.Select(job => new JobCardViewModel
             {
                 JobId = job.Id,
                 JobTitle = job.JobTitle,
@@ -256,11 +248,8 @@ namespace JobPortalWebApi.Services
          
         public async Task<AllJobsViewModel> GetHotJobsViewModelAsync(int count)
         {
-            // Sirf pehli 5 jobs ko eager loading ke saath fetch karein
-            var jobPosts = await _unitOfWork.JobPosts.GetAllJobsWithDetailsAsync();
-
-            // Yahan hum Top(count) use kar sakte hain
-            var hotJobs = jobPosts.Take(count).ToList();
+             var jobPosts = await _unitOfWork.JobPosts.GetAllJobsWithDetailsAsync();
+             var hotJobs = jobPosts.Take(count).ToList();
 
             var jobCardViewModels = hotJobs.Select(job => new JobCardViewModel
             {
