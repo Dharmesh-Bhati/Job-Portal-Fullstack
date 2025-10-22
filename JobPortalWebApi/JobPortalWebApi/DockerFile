@@ -1,0 +1,20 @@
+# 1. BUILD Stage: Build the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["JobPortalWebApi.csproj", "JobPortalWebApi/"]
+RUN dotnet restore "JobPortalWebApi/JobPortalWebApi.csproj"
+
+# Copy all source code and build
+COPY . .
+WORKDIR "/src/JobPortalWebApi"
+RUN dotnet publish "JobPortalWebApi.csproj" -c Release -o /app/publish
+
+# 2. FINAL Stage: Create the runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Define the entry point for the application
+ENTRYPOINT ["dotnet", "JobPortalWebApi.dll"]
