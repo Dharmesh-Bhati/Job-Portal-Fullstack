@@ -1,14 +1,15 @@
-# 1. BUILD Stage: Build the application
+﻿# 1. BUILD Stage: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
-COPY ["JobPortalWebApi.csproj", "JobPortalWebApi/"]
-RUN dotnet restore "JobPortalWebApi/JobPortalWebApi.csproj"
+# यहाँ, हम csproj फ़ाइल का पूरा रास्ता उपयोग कर रहे हैं
+COPY ["JobPortalWebApi/JobPortalWebApi/JobPortalWebApi.csproj", "JobPortalWebApi/JobPortalWebApi/"]
+RUN dotnet restore "JobPortalWebApi/JobPortalWebApi/JobPortalWebApi.csproj"
 
 # Copy all source code and build
 COPY . .
-WORKDIR "/src/JobPortalWebApi"
+WORKDIR "/src/JobPortalWebApi/JobPortalWebApi"
 RUN dotnet publish "JobPortalWebApi.csproj" -c Release -o /app/publish
 
 # 2. FINAL Stage: Create the runtime image
