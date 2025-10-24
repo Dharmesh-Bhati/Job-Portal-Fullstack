@@ -14,8 +14,8 @@ using JobPortalWebApi.ViewModels;
 
 namespace JobPortalWebApi.Controllers
 {
-    [ApiController]  
-    [Route("api/[controller]")]  
+    [ApiController]
+    [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,7 +24,7 @@ namespace JobPortalWebApi.Controllers
         private readonly IConfiguration _config;
         private readonly IUnitOfWork _unitOfWork;
 
-         
+
         public AccountController(
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
@@ -61,22 +61,47 @@ namespace JobPortalWebApi.Controllers
                 if (model.UserType == "Recruiter")
                 {
                     await _userManager.AddToRoleAsync(user, "Recruiter");
-                    var recruiter = new Recruiter { ApplicationUserId = user.Id };
+
+                    // Recruiter object creation must be robust
+                    var recruiter = new Recruiter
+                    {
+                        ApplicationUserId = user.Id,
+                        // Ensure all non-nullable properties are initialized here 
+                        // to prevent a database 500 error after Identity user creation.
+                        CompanyName = "",
+                        ContactEmail = model.Email,
+                        Location = ""
+                        // Add other required properties as needed
+                    };
                     await _unitOfWork.Recruiters.Add(recruiter);
                 }
                 else
                 {
                     await _userManager.AddToRoleAsync(user, "JobSeeker");
-                    var jobSeeker = new JobSeeker { ApplicationUserId = user.Id };
+
+                    // JobSeeker object creation must be robust
+                    var jobSeeker = new JobSeeker
+                    {
+                        ApplicationUserId = user.Id,
+                        // Ensure all non-nullable properties are initialized here.
+                        FullName = "",
+                        CurrentTitle = "",
+                        Bio = ""
+                        // Add other required properties as needed
+                    };
                     await _unitOfWork.JobSeekers.Add(jobSeeker);
                 }
                 await _unitOfWork.CompleteAsync();
 
-                // Email confirmation logic (still sends a link, but frontend will handle it)
+                // Email confirmation logic (The SendEmailAsync call is now safe)
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                // Note: The callback URL should now point to a React frontend route.
-                var callbackUrl = $"http://localhost:5173/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
+                // IMPORTANT: Change localhost to your actual Render frontend URL
+                // If you don't know the full URL, using a generic domain is safer than localhost for deployment.
+                var frontendBaseUrl = "https://job-portal-react-o7b2.onrender.com";
+                var callbackUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+                // This call is now non-blocking and will log the email instead of sending it.
                 await _emailSender.SendEmailAsync(model.Email, "Confirm your email",
                     $"Please confirm your account by clicking here: <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>Link</a>");
 
@@ -124,7 +149,7 @@ namespace JobPortalWebApi.Controllers
         [HttpPost("logout")] // POST request for logout
         public IActionResult Logout()
         {
-             
+
             return Ok(new { message = "Logged out successfully (token removed on client side)." });
         }
 
