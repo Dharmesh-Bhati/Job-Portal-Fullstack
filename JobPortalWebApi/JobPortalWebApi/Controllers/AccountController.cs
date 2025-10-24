@@ -51,7 +51,8 @@ namespace JobPortalWebApi.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
-                EmailConfirmed = false
+                 
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -62,7 +63,7 @@ namespace JobPortalWebApi.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "Recruiter");
 
-                     
+                    
                     var recruiter = new Recruiter { ApplicationUserId = user.Id };
 
                     await _unitOfWork.Recruiters.Add(recruiter);
@@ -71,26 +72,16 @@ namespace JobPortalWebApi.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "JobSeeker");
 
-                     
+                   
                     var jobSeeker = new JobSeeker { ApplicationUserId = user.Id };
 
                     await _unitOfWork.JobSeekers.Add(jobSeeker);
                 }
                 await _unitOfWork.CompleteAsync();
 
-                // Email confirmation logic (The SendEmailAsync call is now safe)
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+              
 
-                // IMPORTANT: Change localhost to your actual Render frontend URL
-                // If you don't know the full URL, using a generic domain is safer than localhost for deployment.
-                var frontendBaseUrl = "https://job-portal-react-o7b2.onrender.com";
-                var callbackUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
-
-                // This call is now non-blocking and will log the email instead of sending it.
-                await _emailSender.SendEmailAsync(model.Email, "Confirm your email",
-                    $"Please confirm your account by clicking here: <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>Link</a>");
-
-                return Ok(new { message = "Registration successful! Please confirm your email." });
+                return Ok(new { message = "Registration successful! You can now log in." });
             }
 
             foreach (var error in result.Errors)
@@ -111,18 +102,13 @@ namespace JobPortalWebApi.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
 
-
             // Check if user exists and password is correct.
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 return Unauthorized(new { message = "Invalid email or password." });
             }
 
-            // Check if email is confirmed.
-            if (!await _userManager.IsEmailConfirmedAsync(user))
-            {
-                return Unauthorized(new { message = "Email not confirmed. Please check your email for a confirmation link." });
-            }
+            
 
             // Generate JWT token
             var tokenString = GenerateJwtToken(user);
@@ -137,30 +123,7 @@ namespace JobPortalWebApi.Controllers
 
             return Ok(new { message = "Logged out successfully (token removed on client side)." });
         }
-
-        [HttpGet("confirm-email")] // GET request to confirm email
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
-        {
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
-            {
-                return BadRequest("Invalid confirmation link.");
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            if (result.Succeeded)
-            {
-                return Ok(new { message = "Email confirmed successfully. You can now log in." });
-            }
-
-            return BadRequest(new { message = "Error confirming email." });
-        }
-
+  
         // Helper method to generate JWT token
         private string GenerateJwtToken(ApplicationUser user)
         {
