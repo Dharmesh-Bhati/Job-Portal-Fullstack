@@ -4,7 +4,6 @@ import HomeLayout from './Components/HomeLayout'
 import HomePage from './Pages/HomePage'
 import LoginPage from './Pages/LoginPage'
 import RegisterPage from './Pages/Register';
-import ConfirmEmail from './Pages/ConfirmEmail';
 import AddJobSeekerDetails from './Pages/JobSeeker/AddJobSeekerDetails';
 import MyResume from './Pages/JobSeeker/MyResume';
 import CompanyAddress from './Pages/Recruiter/CompanyAddress';
@@ -36,7 +35,7 @@ const router = createBrowserRouter([
             //Account controller
             {path: '/login',element: <LoginPage />},
             { path: '/register', element: <RegisterPage /> },
-            { path: '/confirm-email', element: <ConfirmEmail /> }, 
+             
 
             //JobSeeker controller
             { path: '/JobSeeker/AddJobSeekerDetails', element: <AddJobSeekerDetails />}, 
