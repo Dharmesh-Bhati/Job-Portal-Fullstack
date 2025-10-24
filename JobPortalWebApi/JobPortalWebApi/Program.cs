@@ -4,7 +4,7 @@ using JobPortalWebApi.Repositories;
 using JobPortalWebApi.Services;
 using JobPortalWebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore; // DbContext.Database.Migrate() के लिए जरूरी
+using Microsoft.EntityFrameworkCore; 
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,8 +27,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Identity for user management
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-  .AddEntityFrameworkStores<ApplicationDbContext>()
-  .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
@@ -59,25 +59,27 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 // Add CORS policy to allow your React app to make requests
-//...
+// ----------------------------------------------------------------------
+// FINAL CORS FIX: Allowing any origin to resolve the 'No Access-Control-Allow-Origin' error
+// ----------------------------------------------------------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         builder =>
         {
-            builder.WithOrigins("http://localhost:5173", // Localhost for testing
-                                "https://job-portal-react-o7b2.onrender.com")  
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+            builder.AllowAnyOrigin()  
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
         });
 });
-//...
+// ----------------------------------------------------------------------
+
 // Add Swagger/OpenAPI for API documentation and testing
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Add JWT authentication to Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    // Add JWT authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
         Description = "Please enter a valid token",
@@ -87,7 +89,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-  {
+    {
     {
       new OpenApiSecurityScheme
       {
@@ -99,7 +101,7 @@ builder.Services.AddSwaggerGen(c =>
       },
       Array.Empty<string>()
     }
-  });
+    });
 });
 
 //   Repository, Unit of Work, and Service Registrations
@@ -175,9 +177,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
-// ----------------------------------------------------------------------
-// The original second seeding block has been merged and updated above.
-// The original first seeding block has been updated and moved above.
 // ----------------------------------------------------------------------
 
 app.Run();
