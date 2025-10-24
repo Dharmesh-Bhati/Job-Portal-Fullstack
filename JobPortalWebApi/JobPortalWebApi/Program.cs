@@ -59,17 +59,19 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 // Add CORS policy to allow your React app to make requests
+//...
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-      builder =>
-      {
-          builder.WithOrigins("http://localhost:5173")
-           .AllowAnyHeader()
-           .AllowAnyMethod();
-      });
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:5173", // Localhost for testing
+                                "https://job-portal-react-o7b2.onrender.com")  
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+        });
 });
-
+//...
 // Add Swagger/OpenAPI for API documentation and testing
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
