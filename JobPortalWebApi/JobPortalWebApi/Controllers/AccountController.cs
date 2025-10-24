@@ -62,33 +62,18 @@ namespace JobPortalWebApi.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "Recruiter");
 
-                    // Recruiter object creation must be robust
-                    var recruiter = new Recruiter
-                    {
-                        ApplicationUserId = user.Id,
-                        // Ensure all non-nullable properties are initialized here 
-                        // to prevent a database 500 error after Identity user creation.
-                        CompanyName = "",
-                        ContactEmail = model.Email,
-                        Location = ""
-                        // Add other required properties as needed
-                    };
+                     
+                    var recruiter = new Recruiter { ApplicationUserId = user.Id };
+
                     await _unitOfWork.Recruiters.Add(recruiter);
                 }
                 else
                 {
                     await _userManager.AddToRoleAsync(user, "JobSeeker");
 
-                    // JobSeeker object creation must be robust
-                    var jobSeeker = new JobSeeker
-                    {
-                        ApplicationUserId = user.Id,
-                        // Ensure all non-nullable properties are initialized here.
-                        FullName = "",
-                        CurrentTitle = "",
-                        Bio = ""
-                        // Add other required properties as needed
-                    };
+                     
+                    var jobSeeker = new JobSeeker { ApplicationUserId = user.Id };
+
                     await _unitOfWork.JobSeekers.Add(jobSeeker);
                 }
                 await _unitOfWork.CompleteAsync();
