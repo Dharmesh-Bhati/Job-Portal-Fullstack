@@ -1,10 +1,10 @@
-using JobPortalWebApi.Data;
+﻿using JobPortalWebApi.Data;
 using JobPortalWebApi.Data.SeedData;
 using JobPortalWebApi.Repositories;
 using JobPortalWebApi.Services;
 using JobPortalWebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore; // DbContext.Database.Migrate() के लिए जरूरी
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,13 +22,13 @@ builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, re
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    //options.UseSqlServer(connectionString));
+//options.UseSqlServer(connectionString));
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Identity for user management
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+  .AddEntityFrameworkStores<ApplicationDbContext>()
+  .AddDefaultTokenProviders();
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
@@ -62,20 +62,20 @@ builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        builder =>
-        {
-            builder.WithOrigins("http://localhost:5173")  
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
+      builder =>
+      {
+          builder.WithOrigins("http://localhost:5173")
+           .AllowAnyHeader()
+           .AllowAnyMethod();
+      });
 });
 
 // Add Swagger/OpenAPI for API documentation and testing
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Add JWT authentication to Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    // Add JWT authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
         Description = "Please enter a valid token",
@@ -85,22 +85,22 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
+  {
     {
+      new OpenApiSecurityScheme
+      {
+        Reference = new OpenApiReference
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
+          Type = ReferenceType.SecurityScheme,
+          Id = "Bearer"
         }
-    });
+      },
+      Array.Empty<string>()
+    }
+  });
 });
 
-//   Repository, Unit of Work, and Service Registrations
+//   Repository, Unit of Work, and Service Registrations
 builder.Services.AddScoped<IJobSeekerRepository, JobSeekerRepository>();
 builder.Services.AddScoped<IRecruiterRepository, RecruiterRepository>();
 builder.Services.AddScoped<IJobPostRepository, JobPostRepository>();
@@ -143,29 +143,40 @@ app.UseAuthorization();
 // Map controllers for Web API endpoints
 app.MapControllers();
 
-// Seeding logic
-using (var scope = app.Services.CreateScope())
-{
-    var serviceProvider = scope.ServiceProvider;
-    var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.Initialize(userManager, roleManager);
-}
-
+// ----------------------------------------------------------------------
+// RENDER FREE TIER FIX: Force Database Migration and Seeding before App Run
+// ----------------------------------------------------------------------
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+
+        // 1. Force database migration (Creates schema if it doesn't exist)
+        context.Database.Migrate();
+
+        // 2. Seed Identity Data (Users/Roles)
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+        // Using .Wait() to ensure the async task completes synchronously before continuing (Critical for startup health checks)
+        DbInitializer.Initialize(userManager, roleManager).Wait();
+
+        // 3. Seed Job Category Data
         JobCategoryDataSeeder.SeedCategories(context);
+
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
+// ----------------------------------------------------------------------
+// The original second seeding block has been merged and updated above.
+// The original first seeding block has been updated and moved above.
+// ----------------------------------------------------------------------
 
 app.Run();
 
