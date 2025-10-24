@@ -320,9 +320,30 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 // ----------------------------------------------------------------------
-// RENDER DEBUG FIX: Temporarily remove UseCors middleware to bypass stubborn CORS check
-// app.UseCors("AllowReactApp"); // <--- इसे हटा दिया गया है
+// RENDER FINAL ABERRANT CORS FIX: Custom Middleware to force CORS Headers
+// This must be placed after UseRouting() and before UseAuthentication()
 // ----------------------------------------------------------------------
+app.Use(async (context, next) =>
+{
+    // Force Access-Control-Allow-Origin: * on every response
+    context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+    context.Response.Headers.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+    // Handle Preflight requests (OPTIONS method) immediately
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 200;
+        await context.Response.CompleteAsync();
+    }
+    else
+    {
+        await next();
+    }
+});
+// ----------------------------------------------------------------------
+
+// The standard app.UseCors("AllowReactApp"); is now replaced by the custom middleware above.
 
 app.UseStaticFiles();
 
