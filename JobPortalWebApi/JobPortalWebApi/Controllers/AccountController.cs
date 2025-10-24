@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
-using JobPortalWebApi.Services.Interfaces;
 using JobPortalWebApi.ViewModels;
 //using Microsoft.AspNetCore.Authorization;
 
@@ -20,7 +19,7 @@ namespace JobPortalWebApi.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
-        private readonly IEmailSender _emailSender;
+        
         private readonly IConfiguration _config;
         private readonly IUnitOfWork _unitOfWork;
 
@@ -28,7 +27,6 @@ namespace JobPortalWebApi.Controllers
         public AccountController(
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
-            IEmailSender emailSender,
             IConfiguration config,
             IUnitOfWork unitOfWork)
         {
