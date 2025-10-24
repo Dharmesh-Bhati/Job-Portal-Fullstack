@@ -155,60 +155,60 @@ namespace JobPortalWebApi.Controllers
 
         // FORGOT PASSWORD Endpoints (APIs)
         // ---
-        [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //[HttpPost("forgot-password")]
+        //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+        //    var user = await _userManager.FindByEmailAsync(model.Email);
 
-            // Security measure: Don't reveal if user exists.
-            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
-            {
-                // Return a success message even if the user doesn't exist to prevent enumeration attacks.
-                return Ok(new { message = "If your email is registered and confirmed, a password reset link has been sent to it." });
-            }
+        //    // Security measure: Don't reveal if user exists.
+        //    if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        //    {
+        //        // Return a success message even if the user doesn't exist to prevent enumeration attacks.
+        //        return Ok(new { message = "If your email is registered and confirmed, a password reset link has been sent to it." });
+        //    }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = $"http://localhost:3000/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+        //    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        //    var callbackUrl = $"http://localhost:3000/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
 
-            await _emailSender.SendEmailAsync(model.Email, "Reset Password",
-                $"Please reset your password by clicking here: <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>link</a>.");
+        //    await _emailSender.SendEmailAsync(model.Email, "Reset Password",
+        //        $"Please reset your password by clicking here: <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>link</a>.");
 
-            return Ok(new { message = "A password reset link has been sent to your email." });
-        }
+        //    return Ok(new { message = "A password reset link has been sent to your email." });
+        //}
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //[HttpPost("reset-password")]
+        //public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                // Security measure: Don't reveal if user doesn't exist.
-                return BadRequest("Invalid token or email.");
-            }
+        //    var user = await _userManager.FindByEmailAsync(model.Email);
+        //    if (user == null)
+        //    {
+        //        // Security measure: Don't reveal if user doesn't exist.
+        //        return BadRequest("Invalid token or email.");
+        //    }
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+        //    var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
 
-            if (result.Succeeded)
-            {
-                return Ok(new { message = "Password reset successfully. You can now log in with your new password." });
-            }
+        //    if (result.Succeeded)
+        //    {
+        //        return Ok(new { message = "Password reset successfully. You can now log in with your new password." });
+        //    }
 
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+        //    foreach (var error in result.Errors)
+        //    {
+        //        ModelState.AddModelError(string.Empty, error.Description);
+        //    }
 
-            return BadRequest(ModelState);
-        }
+        //    return BadRequest(ModelState);
+        //}
     }
 }
