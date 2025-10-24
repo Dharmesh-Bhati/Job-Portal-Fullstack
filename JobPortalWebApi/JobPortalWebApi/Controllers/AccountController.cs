@@ -32,7 +32,7 @@ namespace JobPortalWebApi.Controllers
         {
             _userManager = userManager;
             _context = context;
-            _emailSender = emailSender;
+            
             _config = config;
             _unitOfWork = unitOfWork;
         }
